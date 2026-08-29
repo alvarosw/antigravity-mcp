@@ -72,7 +72,7 @@ export function runAg(yArgs, options = {}) {
 }
 
 export function buildAgentArgs(input) {
-  const args = ["--print"];
+  const args = ["--print", input.prompt];
 
   if (input.outputFormat) {
     args.push("--output-format", input.outputFormat);
@@ -93,6 +93,5 @@ export function buildAgentArgs(input) {
 
   if (Array.isArray(input.extraArgs)) args.push(...input.extraArgs);
 
-  args.push(input.prompt);
   return args;
 }
