@@ -1,6 +1,6 @@
 {
   "name": "antigravity-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A lightweight MCP server that exposes the Antigravity CLI to MCP clients such as Claude Code.",
   "type": "module",
   "main": "src/index.js",
