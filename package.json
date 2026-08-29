@@ -1,0 +1,21 @@
+{
+  "name": "antigravity-mcp",
+  "version": "1.0.0",
+  "description": "A lightweight MCP server that exposes the Antigravity CLI to MCP clients such as Claude Code.",
+  "type": "module",
+  "main": "src/index.js",
+  "bin": {
+    "antigravity-mcp": "src/index.js"
+  },
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "keywords": ["mcp", "antigravity", "claude-code", "gemini", "agent"],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.17.5"
+  }
+}
