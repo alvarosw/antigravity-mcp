@@ -1,16 +1,16 @@
 # Antigravity MCP
 
-A lightweight [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server that exposes the local [Antigravity CLI](https://github.com/google-gemini/gemini-cli) to MCP-compatible coding agents such as Claude Code, Cursor, Gemini CLI, and Windsurf.
+A lightweight [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server that exposes the local Antigravity CLI (`agy`) to MCP-compatible coding agents.
 
-The project intentionally keeps the architecture small: MCP tools validate inputs, a thin CLI adapter executes `agy`, and the raw tool provides an escape hatch for CLI options that are added in future Antigravity releases.
+The project intentionally keeps the architecture small: MCP tools validate inputs, a thin CLI adapter executes `agy`, and `agy_raw` provides an escape hatch for CLI options that are added in future Antigravity releases.
 
 ## Features
 
-- Run Antigravity as a real local agent from an MCP client.
-- Keep conversation context with conversation IDs or the latest conversation.
+- Run Antigravity as a local coding agent through MCP.
+- Preserve conversation context with conversation IDs.
 - Control common CLI options such as model, effort, sandbox, permissions, directories, timeouts, and output format.
 - Inspect usage, quota, models, version, and help.
-- Execute read-only slash commands supported by the installed CLI.
+- Execute supported read-only slash commands.
 - Pass arbitrary CLI arguments through `agy_raw` for forward compatibility.
 - No shell execution: arguments are passed directly to the `agy` process.
 
@@ -21,44 +21,26 @@ The project intentionally keeps the architecture small: MCP tools validate input
 - `agy` available on `PATH`
 - An MCP-compatible client
 
-Set `AGY_CMD` when the executable is not on `PATH`:
+If `agy` is not on `PATH`, set `AGY_CMD` to the executable path.
 
 ```bash
 AGY_CMD=/custom/path/agy
 ```
 
-On Windows PowerShell:
+Windows PowerShell:
 
 ```powershell
 $env:AGY_CMD = "C:\path\to\agy.exe"
 ```
 
-## Install
+## Quick Start
 
-Clone the repository and install dependencies:
+The recommended setup is through npm. You do not need to clone this repository or install the MCP server manually.
 
-```bash
-git clone https://github.com/alvarosw/antigravity-mcp.git
-cd antigravity-mcp
-npm install
-```
-
-No build step is required.
-
-## Claude Code
-
-### Local checkout
-
-Register the server for your user account:
+### Claude Code
 
 ```bash
-claude mcp add --scope user antigravity -- node /absolute/path/to/antigravity-mcp/src/index.js
-```
-
-Windows PowerShell:
-
-```powershell
-claude mcp add --scope user antigravity -- node C:\path\to\antigravity-mcp\src\index.js
+claude mcp add --scope user antigravity -- npx -y antigravity-mcp
 ```
 
 Verify the server:
@@ -67,89 +49,109 @@ Verify the server:
 claude mcp list
 ```
 
-> The `claude mcp add` command registers an stdio MCP server. The path must point to the local `src/index.js` file.
-
-### Using an environment variable for `agy`
+If `agy` is not on `PATH`:
 
 ```bash
-claude mcp add --scope user --env AGY_CMD=/custom/path/agy antigravity -- node /absolute/path/to/antigravity-mcp/src/index.js
+claude mcp add --scope user \
+  --env AGY_CMD=/custom/path/agy \
+  antigravity -- npx -y antigravity-mcp
 ```
 
-PowerShell:
+Windows PowerShell:
 
 ```powershell
-claude mcp add --scope user --env AGY_CMD="C:\path\to\agy.exe" antigravity -- node C:\path\to\antigravity-mcp\src\index.js
+claude mcp add --scope user `
+  --env AGY_CMD="C:\path\to\agy.exe" `
+  antigravity -- npx -y antigravity-mcp
 ```
 
-## Cursor
+### Gemini CLI
 
-Cursor supports local MCP servers through its MCP configuration. Add the following server entry to your MCP configuration:
+Gemini CLI supports adding local stdio MCP servers with `gemini mcp add`.
+
+```bash
+gemini mcp add --scope user antigravity npx -y antigravity-mcp
+```
+
+Verify:
+
+```bash
+gemini mcp list
+```
+
+Reference: [Gemini CLI MCP documentation](https://geminicli.com/docs/tools/mcp-server/)
+
+### Cursor
+
+Add the following MCP server to Cursor's MCP configuration:
 
 ```json
 {
   "mcpServers": {
     "antigravity": {
-      "command": "node",
-      "args": [
-        "/absolute/path/to/antigravity-mcp/src/index.js"
-      ]
+      "command": "npx",
+      "args": ["-y", "antigravity-mcp"]
     }
   }
 }
 ```
 
-Windows example:
+### Windsurf
+
+Add the following stdio server to Windsurf's MCP configuration:
 
 ```json
 {
   "mcpServers": {
     "antigravity": {
-      "command": "node",
-      "args": [
-        "C:\\path\\to\\antigravity-mcp\\src\\index.js"
-      ]
+      "command": "npx",
+      "args": ["-y", "antigravity-mcp"]
     }
   }
 }
 ```
 
-Restart Cursor after changing the MCP configuration.
+### Cline / Roo Code / Other MCP Clients
 
-## Windsurf
-
-Windsurf supports local stdio MCP servers through its MCP configuration. Add an entry equivalent to:
+For MCP clients that expose a generic stdio configuration, use:
 
 ```json
 {
-  "mcpServers": {
-    "antigravity": {
-      "command": "node",
-      "args": [
-        "/absolute/path/to/antigravity-mcp/src/index.js"
-      ]
-    }
-  }
+  "command": "npx",
+  "args": ["-y", "antigravity-mcp"]
 }
 ```
 
-If your Windsurf installation uses a different MCP configuration location, use the MCP settings UI and enter the same command and arguments.
+If the client supports environment variables, `AGY_CMD` can be set there as well.
 
-## Other MCP Clients
+## Why npx?
 
-This server uses standard MCP over stdio. Any MCP client that supports local command-based servers can use it with:
+`npx` lets MCP clients start the published package without requiring a local repository checkout. The client only needs Node.js and the Antigravity CLI.
 
-```text
-Command: node
-Arguments: /absolute/path/to/antigravity-mcp/src/index.js
+To pin a specific version:
+
+```bash
+npx -y antigravity-mcp@1.0.1
 ```
 
-The same pattern can be used with other coding agents that support stdio MCP servers.
+Using `npx -y antigravity-mcp` follows the package version selected by npm's normal package resolution behavior.
+
+## Local Development
+
+```bash
+git clone https://github.com/alvarosw/antigravity-mcp.git
+cd antigravity-mcp
+npm install
+npm start
+```
+
+No build step is required.
 
 ## Tools
 
 ### `agy_run`
 
-Run Antigravity as an agent while exposing common CLI controls:
+Run Antigravity as an agent with common CLI controls:
 
 - prompt
 - model
@@ -165,7 +167,7 @@ Run Antigravity as an agent while exposing common CLI controls:
 - working directory
 - environment variables
 
-Example payload:
+Example:
 
 ```json
 {
@@ -196,11 +198,11 @@ Returns the installed CLI version.
 
 ### `agy_help`
 
-Shows CLI help. Pass `command` for command-specific help.
+Shows CLI help. A command can be provided for command-specific help.
 
 ### `agy_readonly_command`
 
-Runs a read-only slash command through print mode. This is useful for commands such as:
+Runs a read-only slash command through print mode. Examples include:
 
 ```text
 /usage
@@ -211,7 +213,7 @@ Runs a read-only slash command through print mode. This is useful for commands s
 /credits
 ```
 
-The tool does not try to maintain a fixed list, so newer read-only commands can be used as long as the installed CLI supports them.
+The tool does not maintain a fixed command list, so newer read-only commands can be used as long as the installed CLI supports them.
 
 ### `agy_raw`
 
@@ -234,7 +236,7 @@ src/
 └── antigravity.js     # Thin process adapter for the agy CLI
 ```
 
-The dependency direction is intentionally simple:
+Dependency direction:
 
 ```text
 MCP transport
@@ -246,31 +248,15 @@ agy CLI adapter
 local agy executable
 ```
 
-There is no service container, repository layer, or framework abstraction because the project only needs one external process boundary.
+There is intentionally no service container, repository layer, or framework abstraction. The project has one external process boundary and keeps that boundary explicit.
 
 ## Security Notes
 
-`agy_raw` can execute arbitrary Antigravity CLI arguments with the permissions of the user running the MCP server. The server itself does not invoke a shell, which prevents shell interpolation through tool arguments, but it does not restrict what `agy` is allowed to do.
+`agy_raw` can execute arbitrary Antigravity CLI arguments with the permissions of the user running the MCP server. The server itself does not invoke a shell, so tool arguments are not shell-interpreted, but `agy` still has whatever permissions the user grants it.
 
 Use permission bypass options only when you explicitly trust the task and workspace.
 
-Environment variables passed through the `env` field are inherited by the `agy` process. Avoid sending secrets through an MCP client unless necessary.
-
-## Development
-
-Run directly:
-
-```bash
-npm start
-```
-
-Or:
-
-```bash
-node src/index.js
-```
-
-The server communicates over stdio, so it is normally launched by the MCP client rather than manually.
+Environment variables passed through the `env` field are inherited by the `agy` process. Avoid sending secrets through MCP tool arguments unless necessary.
 
 ## License
 
